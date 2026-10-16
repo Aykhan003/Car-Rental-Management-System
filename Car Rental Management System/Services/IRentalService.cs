@@ -68,4 +68,61 @@ public class IRentalService
         await _context.SaveChangesAsync();
         return rental;
     }
+    public async Task<Rental> ReturnCarAsync(int rentalId, DateTime actualReturnDate)
+    {
+        var rental = await _context.Rentals.Include(r => r.Car).FirstOrDefaultAsync(r => r.Id == rentalId);
+        if (rental == null)
+        {
+            throw new ArgumentException("Rental not found.");
+        }
+        if (actualReturnDate < rental.StartDate)
+        {
+            throw new ArgumentException("Actual return date cannot be before the rental start date.");
+        }
+        if (rental.Status == Status.Rented)
+        {
+            throw new InvalidOperationException("Car has already been returned.");
+        }
+        
+        rental.ActualReturnDate = actualReturnDate;
+        rental.Status = Status.Rented;
+        var overdueDays = (actualReturnDate - rental.ExpectedReturnDate).Days;
+        if (overdueDays > 0)
+        {
+            var penaltyRate = 1.5m; // Example penalty rate
+            var penaltyAmount = overdueDays * rental.DailyPrice * penaltyRate;
+            rental.TotalPrice += penaltyAmount;
+            // Optionally, you can add a record to PenaltyMaintenanceRecords here
+        }
+        await _context.SaveChangesAsync();
+        return rental;
+    }
+    public async Task<Rental> CancelRentalAsync(int rentalId)
+    {
+        var rental = await _context.Rentals.FindAsync(rentalId);
+        if (rental == null)
+        {
+            throw new ArgumentException("Rental not found.");
+        }
+        if (rental.Status != Status.Available)
+        {
+            throw new InvalidOperationException("Only available rentals can be canceled.");
+        }
+        if (rental.StartDate <= DateTime.Today)
+        {
+            throw new InvalidOperationException("Cannot cancel a rental that has already started.");
+        }
+        if (rental.Status == Status.Rented)
+        {
+            throw new InvalidOperationException("Cannot cancel a rental that is currently rented.");
+        }
+        if (rental.Status == Status.Maintenance)
+        {
+            throw new InvalidOperationException("Cannot cancel a rental that is under maintenance.");
+        }
+        
+        rental.Status = Status.Maintenance; // Assuming canceled rentals are marked as maintenance
+        await _context.SaveChangesAsync();
+        return rental;
+    })
 }
