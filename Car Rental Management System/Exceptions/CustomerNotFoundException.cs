@@ -6,4 +6,7 @@ public class CustomerNotFoundException : Exception
         : base($"Customer with ID {customerId} not found.")
     {
     }
+    public CustomerNotFoundException(string message) : base(message)
+    {
+    }
 }

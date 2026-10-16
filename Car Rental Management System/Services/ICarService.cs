@@ -1,4 +1,5 @@
 ﻿using Car_Rental_Management_System.Data;
+using Car_Rental_Management_System.Exceptions;
 using Car_Rental_Management_System.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,14 @@ public class ICarService
     }
     public async Task<Car?> GetCarByIdAsync(int id)
     {
+        if (id <= 0)
+        {
+            throw new ArgumentException("Car ID must be greater than zero.");
+        }
+        if (await _context.Cars.FindAsync(id) == null)
+        {
+            throw new CarNotFoundException("Car with the specified ID does not exist.");
+        }
         return await _context.Cars.FindAsync(id);
     }
     public async Task AddCarAsync(Car car)
@@ -32,6 +41,10 @@ public class ICarService
     public async Task DeactiveCarAsync(int id)
     {
         var car = await _context.Cars.FindAsync(id);
+        if (car == null)
+        {
+            throw new ArgumentException("Car with the specified ID does not exist.");
+        }
         if (car != null)
         {
             car.IsAvailable = false;

@@ -1,4 +1,5 @@
 ﻿using Car_Rental_Management_System.Data;
+using Car_Rental_Management_System.Exceptions;
 using Car_Rental_Management_System.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,14 @@ public class ICustomerService
     }
     public async Task<Customer?> GetCustomerByIdAsync(int id)
     {
+        if (id <= 0)
+        {
+            throw new ArgumentException("Customer ID must be greater than zero.");
+        }
+        if (await _context.Customers.FindAsync(id) == null)
+        {
+            throw new CustomerNotFoundException("Customer with the specified ID does not exist.");
+        }
         return await _context.Customers.FindAsync(id);
     }
     public async Task AddCustomerAsync(Customer customer)

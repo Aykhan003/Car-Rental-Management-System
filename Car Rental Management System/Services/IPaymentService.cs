@@ -1,5 +1,6 @@
 ﻿using Car_Rental_Management_System.Data;
 using Car_Rental_Management_System.Enums;
+using Car_Rental_Management_System.Exceptions;
 using Car_Rental_Management_System.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -110,5 +111,18 @@ public class IPaymentService
         return await _context.Payments
             .Where(p => p.Amount >= minAmount && p.Amount <= maxAmount)
             .ToListAsync();
+    }
+    public async Task<Payment> ExceedsPaymentsAsync(int customerId, decimal totalPayments, decimal totalDebt)
+    {
+        if (totalPayments > totalDebt)
+        {
+            throw new PaymentsExceedsDebtException($"Total payments ({totalPayments:C}) exceed total debt ({totalDebt:C}) for customer with ID {customerId}.");
+        }
+        return new Payment
+        {
+            RentalId = 0,
+            Amount = totalPayments,
+            PaymentDate = DateTime.Now
+        };
     }
 }

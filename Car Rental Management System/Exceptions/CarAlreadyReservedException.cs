@@ -6,4 +6,7 @@ public class CarAlreadyReservedException : Exception
         : base($"Car with ID {carId} is already reserved.")
     {
     }
+    public CarAlreadyReservedException(string message) : base(message)
+    {
+    }
 }

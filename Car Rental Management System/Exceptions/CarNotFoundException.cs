@@ -6,4 +6,7 @@ public class CarNotFoundException : Exception
         : base($"Car with ID {carId} not found.")
     {
     }
+    public CarNotFoundException(string message) : base(message)
+    {
+    }
 }

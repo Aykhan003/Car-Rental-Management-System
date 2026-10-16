@@ -6,4 +6,7 @@ public class InvalidRentalDateException : Exception
         : base($"Invalid rental dates. Start date: {startDate}, End date: {endDate}.")
     {
     }
+    public InvalidRentalDateException(string message) : base(message)
+    {
+    }
 }

@@ -1,5 +1,6 @@
 ﻿using Car_Rental_Management_System.Data;
 using Car_Rental_Management_System.Enums;
+using Car_Rental_Management_System.Exceptions;
 using Car_Rental_Management_System.Models;
 using Microsoft.EntityFrameworkCore;
 namespace Car_Rental_Management_System.Services;
@@ -24,16 +25,16 @@ public class IRentalService
     {
         if (rentalDate >= returnDate)
         {
-            throw new ArgumentException("Return date must be after rental date.");
+            throw new InvalidRentalDateException($"Rental date {rentalDate} must be before return date {returnDate}.");
         }
         if (rentalDate < DateTime.Today)
         {
-            throw new ArgumentException("Rental date cannot be in the past.");
+            throw new InvalidRentalDateException($"Rental date {rentalDate} cannot be in the past.");
         }
         var car = await _context.Cars.Include(c => c.PenaltyMaintenanceRecords).FirstOrDefaultAsync(c => c.Id == carId);
         if (car == null)
         {
-            throw new ArgumentException("Car not found.");
+            throw new CarNotFoundException($"Car with ID {carId} does not exist.");
         }
         if (!car.IsAvailable)
         {
@@ -42,12 +43,12 @@ public class IRentalService
         var customer = await _context.Customers.FindAsync(customerId);
         if (customer == null)
         {
-            throw new ArgumentException("Customer not found.");
+            throw new CustomerNotFoundException("Customer with the specified ID does not exist.");
         }
         var hasOverLap = await _context.Rentals.AnyAsync(r => r.CarId == carId && r.Status == Status.Available && r.StartDate < returnDate && r.ExpectedReturnDate > rentalDate);
         if (hasOverLap)
         {
-            throw new InvalidOperationException("Car is already rented for the selected period.");
+            throw new CarAlreadyReservedException("Car is already reserved for the selected period.");
         }
         var maintenanceDue = car.PenaltyMaintenanceRecords.Any(m => m.MaintenanceDate <= rentalDate);
         if (maintenanceDue)
@@ -81,7 +82,7 @@ public class IRentalService
         }
         if (rental.Status == Status.Rented)
         {
-            throw new InvalidOperationException("Car has already been returned.");
+            throw new RentalAlreadyCompletedException("Rental has already been completed.");
         }
         
         rental.ActualReturnDate = actualReturnDate;
