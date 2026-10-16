@@ -125,5 +125,5 @@ public class IRentalService
         rental.Status = Status.Maintenance; // Assuming canceled rentals are marked as maintenance
         await _context.SaveChangesAsync();
         return rental;
-    })
+    }
 }
